@@ -1,0 +1,92 @@
+close all
+clear all
+clc
+
+punkt_rownowagi = [1; 0];
+A = [0, -2; -2*punkt_rownowagi(1), 7];
+B = [3; 0];
+
+
+v0_1 = [1; 0];
+v0_2 = [1; 1];
+v0_3 = [0; 1];
+V = [v0_1, v0_2, v0_3];
+
+
+Q = eye(2);
+R = 1;
+
+r = [0.01, 0.1, 1, 10, 100];
+q = [0.01, 0.1, 1, 10, 100];
+
+
+% podpunkt a
+for mult = r
+    [K, S, e] = lqr(A, B, Q, R*mult);
+    disp(['A) Bieguny dla R = ', num2str(mult), ':']);
+    disp(e);
+    simulate_system(A, B, K, V, "A", mult);
+    close all;
+end
+
+
+% podpunkt b
+for mult = q
+    [K, S, e] = lqr(A, B, Q*mult, R);
+    disp(['B) Bieguny dla Q = ', num2str(mult), ':']);
+    disp(e);
+    simulate_system(A, B, K, V, "B", mult);
+    close all;
+end
+
+
+% podpunkt c
+q = [0.01, 0.1, 1, 10, 100, 1000];
+for mult = q
+    [K, S, e] = lqr(A, B, [mult, 0; 0, 1], R);
+    disp(['C) Bieguny dla Q = ', num2str(mult), ':']);
+    disp(e);
+    simulate_system(A, B, K, V, "C", mult);
+    close all;
+end
+
+
+% podpunkt d
+q = 0;
+[K, S, e] = lqr(A, B, Q*q, R);
+disp(['D) Bieguny dla Q = ', num2str(q), ':']);
+disp(e);
+simulate_system(A, B, K, V, "D", 0);
+close all;
+
+
+% podpunkt e
+% k = 0.1
+[K, S, e] = lqr(A, B, Q, R);
+disp(['E) Bieguny dla k = ', num2str(0.1), ':']);
+disp(e);
+simulate_system(A, 0.1*B, K, V, "E", 0.1);
+close all;
+
+% k = 10
+[K, S, e] = lqr(A, B, Q, R);
+disp(['E) Bieguny dla k = ', num2str(10), ':']);
+disp(e);
+simulate_system(A, 10*B, K, V, "E", 10);
+close all;
+
+
+function simulate_system(A, B, K, V, point, value)
+    tspan = [0, 10];
+    for v0 = V
+        [t, v] = ode45(@(t, v) (A - B * K) * v, tspan, v0);
+        plot(t, v);
+        title_str = sprintf('Trajektoria dla v0 = [%s]', num2str(v0'));
+        title(title_str);
+        xlabel('Czas [s]');
+        ylabel('Zmienna stanu');
+        ylim([-7, 7]);
+        filename = sprintf('%s_%g_Trajektoria_dla_v0=[%s,%s].png', point, value, num2str(v0(1)), num2str(v0(2)));
+        print(filename, '-dpng', '-r500');
+    end
+end
