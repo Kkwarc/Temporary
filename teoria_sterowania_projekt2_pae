@@ -2,7 +2,7 @@ close all
 clear all
 clc
 
-punkt_rownowagi = [1; 0];
+punkt_rownowagi = [-1; 0];
 A = [0, -2; -2*punkt_rownowagi(1), 7];
 B = [3; 0];
 
@@ -18,75 +18,332 @@ R = 1;
 
 r = [0.01, 0.1, 1, 10, 100];
 q = [0.01, 0.1, 1, 10, 100];
+q_d = [0.01, 0.1, 1, 10, 100, 1000];
 
 
 % podpunkt a
-for mult = r
-    [K, S, e] = lqr(A, B, Q, R*mult);
-    disp(['A) Bieguny dla R = ', num2str(mult), ':']);
-    disp(e);
-    simulate_system(A, B, K, V, "A", mult);
+for v0 = V
+    X = {};
+    Poles = {};
+    for mult = r
+        [P, poles, K] = care(A, B, Q, R*mult);
+        disp(['A) Bieguny dla R = ', num2str(mult), ':']);
+        disp(poles);
+        Poles{end+1} = poles;
+        [v, t] = simulate_system(A, B, K, v0, punkt_rownowagi, "A", mult);
+        X{end+1} = {t, v};
+    end
+    figure(101);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(X)
+        legend_entries{end+1} = sprintf('Dla R = %s', num2str(r(k)));
+        t = X{k}{1};
+        x = X{k}{2};
+        plot(x(:, 1), x(:, 2));
+        title('Regulator');
+        xlabel('x1');
+        ylabel('x2');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('A)_Przebiegi_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
     close all;
+    figure(102);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(Poles)
+        legend_entries{end+1} = sprintf('Biegun p1 dla %s', num2str(r(k)));
+        legend_entries{end+1} = sprintf('Biegun p2 dla %s', num2str(r(k)));
+        p1 = cell2mat(Poles(k));
+        scatter(real(p1(1)), imag(p1(1)));
+        scatter(real(p1(2)), imag(p1(2)));
+        title('Bieguny');
+        xlabel('Re');
+        ylabel('Im');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('A)_Bieguny_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all
 end
+close all;
 
 
 % podpunkt b
-for mult = q
-    [K, S, e] = lqr(A, B, Q*mult, R);
-    disp(['B) Bieguny dla Q = ', num2str(mult), ':']);
-    disp(e);
-    simulate_system(A, B, K, V, "B", mult);
+for v0 = V
+    X = {};
+    Poles = {};
+    for mult = r
+        [P, poles, K] = care(A, B, Q*mult, R);
+        disp(['B) Bieguny dla Q = ', num2str(mult), ':']);
+        disp(poles);
+        Poles{end+1} = poles;
+        [v, t] = simulate_system(A, B, K, v0, punkt_rownowagi, "B", mult);
+        X{end+1} = {t, v};
+    end
+    figure(101);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(X)
+        legend_entries{end+1} = sprintf('Dla Q = %', num2str(q(k)));
+        t = X{k}{1};
+        x = X{k}{2};
+        plot(x(:, 1), x(:, 2));
+        title('Regulator');
+        xlabel('x1');
+        ylabel('x2');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('B)_Przebiegi_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+    figure(102);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(Poles)
+        legend_entries{end+1} = sprintf('Biegun p1 dla %s', num2str(q(k)));
+        legend_entries{end+1} = sprintf('Biegun p2 dla %s', num2str(q(k)));
+        p1 = cell2mat(Poles(k));
+        scatter(real(p1(1)), imag(p1(1)));
+        scatter(real(p1(2)), imag(p1(2)));
+        title('Bieguny');
+        xlabel('Re');
+        ylabel('Im');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('B)_Bieguny_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
     close all;
 end
+close all;
 
 
 % podpunkt c
-q = [0.01, 0.1, 1, 10, 100, 1000];
-for mult = q
-    [K, S, e] = lqr(A, B, [mult, 0; 0, 1], R);
-    disp(['C) Bieguny dla Q = ', num2str(mult), ':']);
-    disp(e);
-    simulate_system(A, B, K, V, "C", mult);
+for v0 = V
+    X = {};
+    Poles = {};
+    for mult = q_d
+        [P, poles, K] = care(A, B, [mult, 0; 0, 1], R);
+        disp(['C) Bieguny dla Q = ', num2str(mult), ':']);
+        disp(poles);
+        Poles{end+1} = poles;
+        [v, t] = simulate_system(A, B, K, v0, punkt_rownowagi, "C", mult);
+        X{end+1} = {t, v};
+    end
+    figure(101);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(X)
+        legend_entries{end+1} = sprintf('Dla q_d = %', num2str(q_d(k)));
+        t = X{k}{1};
+        x = X{k}{2};
+        plot(x(:, 1), x(:, 2));
+        title('Regulator');
+        xlabel('x1');
+        ylabel('x2');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('C)_Przebiegi_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+    figure(102);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(Poles)
+        legend_entries{end+1} = sprintf('Biegun p1 dla %s', num2str(q_d(k)));
+        legend_entries{end+1} = sprintf('Biegun p2 dla %s', num2str(q_d(k)));
+        p1 = cell2mat(Poles(k));
+        scatter(real(p1(1)), imag(p1(1)));
+        scatter(real(p1(2)), imag(p1(2)));
+        title('Bieguny');
+        xlabel('Re');
+        ylabel('Im');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('C)_Bieguny_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
     close all;
 end
+close all;
+
 
 
 % podpunkt d
-q = 0;
-[K, S, e] = lqr(A, B, Q*q, R);
-disp(['D) Bieguny dla Q = ', num2str(q), ':']);
-disp(e);
-simulate_system(A, B, K, V, "D", 0);
-close all;
+for v0 = V
+    X = {};
+    Poles = {};
+    [P, poles, K] = care(A, B, 0, R);
+    disp(['D) Bieguny dla Q = ', num2str(0), ':']);
+    disp(poles);
+    Poles{end+1} = poles;
+    [v, t] = simulate_system(A, B, K, v0, punkt_rownowagi, "D", 0);
+    X{end+1} = {t, v};
+
+    figure(101);
+    hold on;
+    grid on;
+    for k = 1:length(X)
+        t = X{k}{1};
+        x = X{k}{2};
+        plot(x(:, 1), x(:, 2));
+        title('Regulator');
+        xlabel('x1');
+        ylabel('x2');
+    end
+    hold off;
+    filename = sprintf('D)_Przebiegi_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+
+
+    figure(102);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(Poles)
+        legend_entries{end+1} = sprintf('Biegun p1 dla %s', num2str(0));
+        legend_entries{end+1} = sprintf('Biegun p2 dla %s', num2str(0));
+        p1 = cell2mat(Poles(k));
+        scatter(real(p1(1)), imag(p1(1)));
+        scatter(real(p1(2)), imag(p1(2)));
+        title('Bieguny');
+        xlabel('Re');
+        ylabel('Im');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('D)_Bieguny_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+end
+
 
 
 % podpunkt e
 % k = 0.1
-[K, S, e] = lqr(A, B, Q, R);
-disp(['E) Bieguny dla k = ', num2str(0.1), ':']);
-disp(e);
-simulate_system(A, 0.1*B, K, V, "E", 0.1);
-close all;
+for v0 = V
+    X = {};
+    Poles = {};
+    [P, poles, K] = care(A, B, Q, R);
+    disp(['E) Bieguny dla Q = ', num2str(0.1), ':']);
+    disp(poles);
+    Poles{end+1} = poles;
+    [v, t] = simulate_system(A, 0.1*B, K, v0, punkt_rownowagi, "E", 0.1);
+    X{end+1} = {t, v};
+    figure(101);
+    hold on;
+    grid on;
+    for k = 1:length(X)
+        t = X{k}{1};
+        x = X{k}{2};
+        plot(x(:, 1), x(:, 2));
+        title('Regulator');
+        xlabel('x1');
+        ylabel('x2');
+    end
+    hold off;
+    filename = sprintf('E)_%s_Przebiegi_dla_v0=[%s,%s].png', num2str(0.1), num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+
+    figure(102);
+    hold on;
+    grid on;
+    legend_entries = {};
+    for k = 1:length(Poles)
+        legend_entries{end+1} = sprintf('Biegun p1 dla podpunktu e');
+        legend_entries{end+1} = sprintf('Biegun p1 dla podpunktu e');
+        p1 = cell2mat(Poles(k));
+        scatter(real(p1(1)), imag(p1(1)));
+        scatter(real(p1(2)), imag(p1(2)));
+        title('Bieguny');
+        xlabel('Re');
+        ylabel('Im');
+    end
+    legend(legend_entries, 'Location', 'best');
+    hold off;
+    filename = sprintf('E)_Bieguny_dla_v0=[%s,%s].png', num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
+end
+
 
 % k = 10
-[K, S, e] = lqr(A, B, Q, R);
-disp(['E) Bieguny dla k = ', num2str(10), ':']);
-disp(e);
-simulate_system(A, 10*B, K, V, "E", 10);
+for v0 = V
+    X = {};
+    Poles = {};
+    [P, poles, K] = care(A, B, 0, R);
+    disp(['E) Bieguny dla Q = ', num2str(10), ':']);
+    disp(poles);
+    Poles{end+1} = poles;
+    [v, t] = simulate_system(A, 10*B, K, v0, punkt_rownowagi, "E", 10);
+    X{end+1} = {t, v};
+    end
+figure(101);
+hold on;
+grid on;
+for k = 1:length(X)
+    t = X{k}{1};
+    x = X{k}{2};
+    plot(x(:, 1), x(:, 2));
+    title('Regulator');
+    xlabel('x1');
+    ylabel('x2');
+end
+hold off;
+filename = sprintf('E)_%s_Przebiegi_dla_v0=[%s,%s].png', num2str(10), num2str(v0(1)), num2str(v0(2)));
+print(filename, '-dpng', '-r500');
 close all;
 
 
-function simulate_system(A, B, K, V, point, value)
+
+function [v, t] = simulate_system(A, B, K, v0, punkt_rownowagi, point, value)
     tspan = [0, 10];
-    for v0 = V
-        [t, v] = ode45(@(t, v) (A - B * K) * v, tspan, v0);
-        plot(t, v);
-        title_str = sprintf('Trajektoria dla v0 = [%s]', num2str(v0'));
-        title(title_str);
-        xlabel('Czas [s]');
-        ylabel('Zmienna stanu');
-        ylim([-7, 7]);
-        filename = sprintf('%s_%g_Trajektoria_dla_v0=[%s,%s].png', point, value, num2str(v0(1)), num2str(v0(2)));
-        print(filename, '-dpng', '-r500');
+    [t, v] = ode45(@(t, v) (A - B * K) * (v-punkt_rownowagi), tspan, v0);
+
+    v_adjusted = v - punkt_rownowagi.';
+
+    u = (B .* K') * v_adjusted(1, :);
+    u = u(1, :);
+
+    for i = 2:size(v_adjusted, 1)
+        u_temp = (B .* K') .* v_adjusted(i, :);
+        u = [u; u_temp(1, :)];
     end
+
+
+    figure(100);
+    hold on;
+    grid on;
+
+    subplot(2, 1, 1);
+    plot(t, v);
+    title_str = sprintf('Trajektoria dla v0 = [%s]', num2str(v0'));
+    title(title_str);
+    xlabel('Czas [s]');
+    ylabel('Zmienna stanu');
+    legend('x1', 'x2');
+
+    subplot(2, 1, 2);
+    plot(t, u);
+    title('Przebieg czasowy u(t)');
+    xlabel('Czas t');
+    ylabel('u');
+    
+    filename = sprintf('%s_%g_Trajektoria_dla_v0=[%s,%s].png', point, value, num2str(v0(1)), num2str(v0(2)));
+    print(filename, '-dpng', '-r500');
+    close all;
 end
